@@ -1,0 +1,70 @@
+appenders:
+  # Appender for the translation logger
+  translation-appender:
+    kind: rolling_file
+    path: logs/translations/translation.log
+    encoder:
+      pattern: "{d(%Y-%m-%d %H:%M:%S)} | {({l}):5.5} | {f}:{L} — {m}{n}"
+    policy:
+      trigger:
+        kind: size
+        limit: 30 mb
+      roller:
+        kind: fixed_window
+        pattern: logs/translations/translation_{}.gz
+        count: 5
+        base: 1
+
+  # Appender for the translation logger
+  error-appender:
+    kind: rolling_file
+    path: logs/errors/error.log
+    encoder:
+      pattern: "{d(%Y-%m-%d %H:%M:%S)} | {({l}):5.5} | {f}:{L} — {m}{n}"
+    policy:
+      trigger:
+        kind: size
+        limit: 30 mb
+      roller:
+        kind: fixed_window
+        pattern: logs/errors/error_{}.gz
+        count: 5
+        base: 1
+
+  # Appender for the translation logger
+  startup-shutdown-appender:
+    kind: rolling_file
+    path: logs/startup-shutdown/startup-shutdown.log
+    encoder:
+      pattern: "{d(%Y-%m-%d %H:%M:%S)} | {({l}):5.5} | {f}:{L} — {m}{n}"
+    policy:
+      trigger:
+        kind: size
+        limit: 30 mb
+      roller:
+        kind: fixed_window
+        pattern: logs/startup-shutdown/startup-shutdown_{}.gz
+        count: 5
+        base: 1
+
+root:
+  level: debug
+  appenders:
+    - stdout
+
+loggers:
+  translation-logger:
+    level: info
+    appenders:
+      - translation-appender
+      
+  error-logger:
+    level: debug
+    appenders:
+      - error-appender
+  
+  startup-shutdown-logger:
+    level: debug
+    appenders:
+      - startup-shutdown-appender
+  
