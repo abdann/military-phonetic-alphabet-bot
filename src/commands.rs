@@ -45,13 +45,17 @@ pub async fn help(
 
 #[poise::command(prefix_command, owners_only, hide_in_help)]
 pub async fn shutdown(ctx: Context<'_>) -> Result<(), Error> {
-    ctx.framework()
-        .shard_manager()
-        .lock()
-        .await
-        .shutdown_all()
-        .await;
-    info!(target: "startup-shutdown-logger", "User '{}' with ID '{}' shutdown the bot.", ctx.author().name, ctx.author().id.0);
+    crate::teardown(
+        ctx.framework().shard_manager,
+        format!(
+            "User '{}' with ID '{}' used the '{}' command.",
+            ctx.author().name,
+            ctx.author().id.0,
+            ctx.command().name
+        )
+        .as_str(),
+    )
+    .await;
     Ok(())
 }
 
