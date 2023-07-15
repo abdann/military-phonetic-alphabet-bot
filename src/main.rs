@@ -1,12 +1,12 @@
 #![warn(clippy::str_to_string)]
 
 mod commands;
+mod mappings;
 
 use dotenvy::dotenv;
-use lazy_static::lazy_static;
 use log::{error, info};
 use poise::serenity_prelude as serenity;
-use std::{collections::HashMap, env::var, time::Duration};
+use std::{env::var, time::Duration};
 use tokio::select;
 #[cfg(unix)]
 use tokio::signal::unix::{signal, SignalKind};
@@ -17,40 +17,6 @@ type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
 pub struct Data;
-
-lazy_static! {
-    static ref MIL_TO_ENG: HashMap<&'static str, &'static str> = {
-        let mut map = HashMap::new();
-        map.insert("alpha", "A");
-        map.insert("bravo", "B");
-        map.insert("charlie", "C");
-        map.insert("delta", "D");
-        map.insert("echo", "E");
-        map.insert("foxtrot", "F");
-        map.insert("golf", "G");
-        map.insert("hotel", "H");
-        map.insert("india", "I");
-        map.insert("juliett", "J");
-        map.insert("kilo", "K");
-        map.insert("lima", "L");
-        map.insert("mike", "M");
-        map.insert("november", "N");
-        map.insert("oscar", "O");
-        map.insert("papa", "P");
-        map.insert("quebec", "Q");
-        map.insert("romeo", "R");
-        map.insert("sierra", "S");
-        map.insert("tango", "T");
-        map.insert("uniform", "U");
-        map.insert("victor", "V");
-        map.insert("whiskey", "W");
-        map.insert("xray", "X");
-        map.insert("x-ray", "X");
-        map.insert("yankee", "Y");
-        map.insert("zulu", "Z");
-        map
-    };
-}
 
 async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
     // This is our custom error handler
@@ -78,7 +44,9 @@ async fn main() {
         commands: vec![
             commands::help(),
             commands::translate(),
+            commands::translate_english(),
             commands::translate_context_menu(),
+            commands::translate_english_context_menu(),
             commands::shutdown(),
         ],
         prefix_options: poise::PrefixFrameworkOptions {
