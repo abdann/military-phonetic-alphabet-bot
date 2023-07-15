@@ -1,6 +1,9 @@
 use poise::serenity_prelude as serenity;
 
-use crate::{Context, Error, MIL_TO_ENG};
+use crate::{
+    mappings::{ENG_TO_MIL, MIL_TO_ENG},
+    Context, Error,
+};
 use log::info;
 
 /// Generates a log of the translation.
@@ -68,6 +71,19 @@ async fn translate_inner(text: &str) -> String {
         .collect::<String>()
 }
 
+/// Function that actually translates from English to NATO military phonetic alphabet
+async fn reverse_translate_inner(text: &str) -> String {
+    text.to_lowercase()
+        .split_whitespace()
+        // get first letter in word and unwrap
+        .filter_map(|eng| ENG_TO_MIL.get(eng.get(0..1).unwrap()))
+        .map(|mil| mil.to_owned())
+        .map(|mil| format!("{} ", mil))
+        .collect::<String>()
+        .trim_end()
+        .to_owned()
+}
+
 /// Translate NATO Military Phonetic Alphabet to English.
 #[poise::command(prefix_command, slash_command, track_edits)]
 pub async fn translate(
@@ -78,6 +94,24 @@ pub async fn translate(
 ) -> Result<(), Error> {
     // Do the translation
     let words = translate_inner(&text).await;
+    // Send the response
+    ctx.say(&words).await?;
+    // Log the translation to the translation logger
+    let log = log_translation(&text, &words, ctx).await;
+    info!(target: "translation-logger", "{}", &log);
+    Ok(())
+}
+
+/// Translate English to NATO Military Phonetic Alphabet.
+#[poise::command(prefix_command, slash_command, track_edits)]
+pub async fn translate_english(
+    ctx: Context<'_>,
+    #[rest]
+    #[description = "Text to translate from NATO military phonetic alphabet to english."]
+    text: String,
+) -> Result<(), Error> {
+    // Do the translation
+    let words = reverse_translate_inner(&text).await;
     // Send the response
     ctx.say(&words).await?;
     // Log the translation to the translation logger
@@ -105,6 +139,25 @@ pub async fn translate_context_menu(
     Ok(())
 }
 
+/// Translate English to NATO Military Phonetic Alphabet.
+#[poise::command(
+    context_menu_command = "Translate English to NATO MPA",
+    rename = "Translate English to NATO MPA"
+)]
+pub async fn translate_english_context_menu(
+    ctx: Context<'_>,
+    #[description = "Message to translate"] msg: serenity::Message,
+) -> Result<(), Error> {
+    // Do the translation
+    let words = reverse_translate_inner(&msg.content).await;
+    // Send the response
+    ctx.say(&words).await?;
+    // Log the translation to the translation logger
+    let log = log_translation(&msg.content, &words, ctx).await;
+    info!(target: "translation-logger", "{}", &log);
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -115,5 +168,12 @@ mod tests {
         let test_input = "India  Mike  Oscar Victor Echo Romeo  Hotel Echo Romeo Echo  Sierra Tango Romeo Oscar Kilo India November Golf Mike Yankee Delta India Charlie Kilo  India  Golf Oscar Tango Lima Oscar Tango India Oscar November Oscar November Mike Yankee Delta India Charlie Kilo Romeo India Golf Hotel Tango November Oscar Whiskey  India Mike  Juliett Uniform Sierra Tango  Sierra Tango Romeo Oscar Kilo India November Golf Mike Yankee Sierra Hotel India Tango India  Mike Hotel Oscar Romeo November Yankee Alpha Sierra Foxtrot Uniform Charlie Kilo Mike Alpha November India Mike Alpha  Foxtrot Romeo Echo Alpha Kilo Mike Alpha November Lima India Kilo Echo";
         let correct_output = "IMOVERHERESTROKINGMYDICKIGOTLOTIONONMYDICKRIGHTNOWIMJUSTSTROKINGMYSHITIMHORNYASFUCKMANIMAFREAKMANLIKE";
         assert_eq!(&translate_inner(test_input).await, correct_output);
+    }
+
+    #[test]
+    async fn test_reverse_translate() {
+        let test_input = "Hello my NAme iS bob.";
+        let correct_output = "Hotel Mike November India Bravo";
+        assert_eq!(&reverse_translate_inner(test_input).await, correct_output);
     }
 }
