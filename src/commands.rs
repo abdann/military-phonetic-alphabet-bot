@@ -74,9 +74,9 @@ async fn translate_inner(text: &str) -> String {
 /// Function that actually translates from English to NATO military phonetic alphabet
 async fn reverse_translate_inner(text: &str) -> String {
     text.to_lowercase()
-        .split_whitespace()
-        // get first letter in word and unwrap
-        .filter_map(|eng| ENG_TO_MIL.get(eng.get(0..1).unwrap()))
+        .chars()
+        // get char as string slice and query hashmap
+        .filter_map(|eng| ENG_TO_MIL.get(eng.to_string().as_str()))
         .map(|mil| mil.to_owned())
         .map(|mil| format!("{} ", mil))
         .collect::<String>()
@@ -172,8 +172,8 @@ mod tests {
 
     #[test]
     async fn test_reverse_translate() {
-        let test_input = "Hello my NAme iS bob.";
-        let correct_output = "Hotel Mike November India Bravo";
+        let test_input = "HOWAREYOU";
+        let correct_output = "Hotel Oscar Whiskey Alpha Romeo Echo Yankee Oscar Uniform";
         assert_eq!(&reverse_translate_inner(test_input).await, correct_output);
     }
 }
